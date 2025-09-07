@@ -512,6 +512,19 @@
         }
 
         /// <summary>
+        /// Retrieve client metadata by client ID.
+        /// </summary>
+        /// <param name="clientId">The client ID.</param>
+        /// <returns>ClientMetadata object if found, null otherwise.</returns>
+        public ClientMetadata GetClientMetadata(Guid clientId)
+        {
+            if (clientId == Guid.Empty) throw new ArgumentException("Client ID cannot be empty.", nameof(clientId));
+            
+            _clientsById.TryGetValue(clientId, out ClientMetadata client);
+            return client;
+        }
+
+        /// <summary>
         /// Determines if a client is connected by its IP:port.
         /// </summary>
         /// <param name="ipPort">The client IP:port string.</param>
@@ -985,7 +998,7 @@
                     _clientsById.TryAdd(client.ClientId, client);
                     _clientsLastSeenById.TryAdd(client.ClientId, DateTime.Now);
                     Logger?.Invoke($"{_header}starting data receiver for: {clientIpPort}");
-                    _events.HandleClientConnected(this, new ConnectionEventArgs(client.ClientId, clientIpPort));
+                    _events.HandleClientConnected(this, new ConnectionEventArgs(client.ClientId));
 
                     if (_keepalive.EnableTcpKeepAlives) EnableKeepalives(tcpClient);
 
@@ -1112,7 +1125,7 @@
                         continue;
                     }
 
-                    Action action = () => _events.HandleDataReceived(this, new DataReceivedEventArgs(client.ClientId, ipPort, data));
+                    Action action = () => _events.HandleDataReceived(this, new DataReceivedEventArgs(client.ClientId, data));
                     if (_settings.UseAsyncDataReceivedEvents)
                     {
                         _ = Task.Run(action, linkedCts.Token);
@@ -1156,15 +1169,15 @@
 
             if (_clientsKicked.ContainsKey(ipPort))
             {
-                _events.HandleClientDisconnected(this, new ConnectionEventArgs(client.ClientId, ipPort, DisconnectReason.Kicked));
+                _events.HandleClientDisconnected(this, new ConnectionEventArgs(client.ClientId, DisconnectReason.Kicked));
             }
             else if (_clientsTimedout.ContainsKey(client.IpPort))
             {
-                _events.HandleClientDisconnected(this, new ConnectionEventArgs(client.ClientId, ipPort, DisconnectReason.Timeout));
+                _events.HandleClientDisconnected(this, new ConnectionEventArgs(client.ClientId, DisconnectReason.Timeout));
             }
             else
             {
-                _events.HandleClientDisconnected(this, new ConnectionEventArgs(client.ClientId, ipPort, DisconnectReason.Normal));
+                _events.HandleClientDisconnected(this, new ConnectionEventArgs(client.ClientId, DisconnectReason.Normal));
             }
 
             _clients.TryRemove(ipPort, out _);
@@ -1305,7 +1318,7 @@
 
                 if (!_ssl) client.NetworkStream.Flush();
                 else client.SslStream.Flush();
-                _events.HandleDataSent(this, new DataSentEventArgs(client.ClientId, ipPort, contentLength));
+                _events.HandleDataSent(this, new DataSentEventArgs(client.ClientId, contentLength));
             }
             finally
             {
@@ -1343,7 +1356,7 @@
 
                 if (!_ssl) await client.NetworkStream.FlushAsync(token).ConfigureAwait(false);
                 else await client.SslStream.FlushAsync(token).ConfigureAwait(false);
-                _events.HandleDataSent(this, new DataSentEventArgs(client.ClientId, ipPort, contentLength));
+                _events.HandleDataSent(this, new DataSentEventArgs(client.ClientId, contentLength));
             }
             catch (TaskCanceledException)
             {
@@ -1387,7 +1400,7 @@
 
                 if (!_ssl) client.NetworkStream.Flush();
                 else client.SslStream.Flush();
-                _events.HandleDataSent(this, new DataSentEventArgs(clientId, client.IpPort, contentLength));
+                _events.HandleDataSent(this, new DataSentEventArgs(clientId, contentLength));
             }
             finally
             {
@@ -1425,7 +1438,7 @@
 
                 if (!_ssl) await client.NetworkStream.FlushAsync(token).ConfigureAwait(false);
                 else await client.SslStream.FlushAsync(token).ConfigureAwait(false);
-                _events.HandleDataSent(this, new DataSentEventArgs(clientId, client.IpPort, contentLength));
+                _events.HandleDataSent(this, new DataSentEventArgs(clientId, contentLength));
             }
             catch (TaskCanceledException)
             {

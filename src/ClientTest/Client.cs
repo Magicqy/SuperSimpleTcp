@@ -100,22 +100,22 @@
 
         static void Connected(object sender, ConnectionEventArgs e)
         {
-            Console.WriteLine("*** Server " + e.IpPort + " connected");
+            Console.WriteLine("*** Server " + _Client.ServerIpPort + " connected");
         }
 
         static void Disconnected(object sender, ConnectionEventArgs e)
         {
-            Console.WriteLine("*** Server " + e.IpPort + " disconnected"); 
+            Console.WriteLine("*** Server " + _Client.ServerIpPort + " disconnected"); 
         }
 
         static void DataReceived(object sender, DataReceivedEventArgs e)
         {
-            Console.WriteLine("[" + e.IpPort + "] " + Encoding.UTF8.GetString(e.Data.Array, 0, e.Data.Count));
+            Console.WriteLine("[" + _Client.ServerIpPort + "] " + Encoding.UTF8.GetString(e.Data.Array, 0, e.Data.Count));
         }
 
         private static void DataSent(object sender, DataSentEventArgs e)
         {
-            Console.WriteLine("[" + e.IpPort + "] sent " + e.BytesSent + " bytes");
+            Console.WriteLine("[" + _Client.ServerIpPort + "] sent " + e.BytesSent + " bytes");
         }
 
         static void Menu()

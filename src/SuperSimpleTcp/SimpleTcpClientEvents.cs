@@ -12,22 +12,22 @@
         /// <summary>
         /// Action to call when the connection is established.
         /// </summary>
-        public Action<object, ConnectionEventArgs> Connected;
+        public Action<SimpleTcpClient, ConnectionEventArgs> Connected;
 
         /// <summary>
         /// Action to call when the connection is destroyed.
         /// </summary>
-        public Action<object, ConnectionEventArgs> Disconnected;
+        public Action<SimpleTcpClient, ConnectionEventArgs> Disconnected;
 
         /// <summary>
         /// Action to call when byte data has become available from the server.
         /// </summary>
-        public Action<object, DataReceivedEventArgs> DataReceived;
+        public Action<SimpleTcpClient, DataReceivedEventArgs> DataReceived;
 
         /// <summary>
         /// Action to call when byte data has been sent to the server.
         /// </summary>
-        public Action<object, DataSentEventArgs> DataSent;
+        public Action<SimpleTcpClient, DataSentEventArgs> DataSent;
 
         #endregion
 
@@ -45,22 +45,22 @@
 
         #region Public-Methods
 
-        internal void HandleConnected(object sender, ConnectionEventArgs args)
+        internal void HandleConnected(SimpleTcpClient sender, ConnectionEventArgs args)
         {
             Connected?.Invoke(sender, args);
         }
 
-        internal void HandleClientDisconnected(object sender, ConnectionEventArgs args)
+        internal void HandleClientDisconnected(SimpleTcpClient sender, ConnectionEventArgs args)
         {
             Disconnected?.Invoke(sender, args);
         }
 
-        internal void HandleDataReceived(object sender, DataReceivedEventArgs args)
+        internal void HandleDataReceived(SimpleTcpClient sender, DataReceivedEventArgs args)
         {
             DataReceived?.Invoke(sender, args);
         }
 
-        internal void HandleDataSent(object sender, DataSentEventArgs args)
+        internal void HandleDataSent(SimpleTcpClient sender, DataSentEventArgs args)
         {
             DataSent?.Invoke(sender, args);
         }

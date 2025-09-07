@@ -23,8 +23,6 @@
     {
         #region Public-Members
 
-
-
         /// <summary>
         /// Indicates whether or not the client is connected to the server.
         /// </summary>
@@ -510,7 +508,7 @@
             _isConnected = true;
             _lastActivity = DateTime.Now;
             _isTimeout = false;
-            _events.HandleConnected(this, new ConnectionEventArgs(Guid.Empty, ServerIpPort));
+            _events.HandleConnected(this, new ConnectionEventArgs(Guid.Empty));
             _dataReceiver = Task.Run(() => DataReceiver(_token), _token);
             _idleServerMonitor = Task.Run(IdleServerMonitor, _token);
             _connectionMonitor = Task.Run(ConnectedMonitor, _token);
@@ -652,7 +650,7 @@
             _isConnected = true;
             _lastActivity = DateTime.Now;
             _isTimeout = false;
-            _events.HandleConnected(this, new ConnectionEventArgs(Guid.Empty, ServerIpPort));
+            _events.HandleConnected(this, new ConnectionEventArgs(Guid.Empty));
             _dataReceiver = Task.Run(() => DataReceiver(_token), _token);
             _idleServerMonitor = Task.Run(IdleServerMonitor, _token);
             _connectionMonitor = Task.Run(ConnectedMonitor, _token);
@@ -902,7 +900,7 @@
                             {
                                 _lastActivity = DateTime.Now;
 
-                                Action action = () => _events.HandleDataReceived(this, new DataReceivedEventArgs(Guid.Empty, ServerIpPort, data));
+                                Action action = () => _events.HandleDataReceived(this, new DataReceivedEventArgs(Guid.Empty, data));
                                 if (_settings.UseAsyncDataReceivedEvents)
                                 {
                                     _ = Task.Run(action, token);
@@ -965,8 +963,8 @@
 
             _isConnected = false;
 
-            if (!_isTimeout) _events.HandleClientDisconnected(this, new ConnectionEventArgs(Guid.Empty, ServerIpPort, DisconnectReason.Normal));
-            else _events.HandleClientDisconnected(this, new ConnectionEventArgs(Guid.Empty, ServerIpPort, DisconnectReason.Timeout));
+            if (!_isTimeout) _events.HandleClientDisconnected(this, new ConnectionEventArgs(Guid.Empty, DisconnectReason.Normal));
+            else _events.HandleClientDisconnected(this, new ConnectionEventArgs(Guid.Empty, DisconnectReason.Timeout));
 
             Dispose();
         }
@@ -1054,7 +1052,7 @@
 
                 if (!_ssl) _networkStream.Flush();
                 else _sslStream.Flush();
-                _events.HandleDataSent(this, new DataSentEventArgs(Guid.Empty, ServerIpPort, contentLength));
+                _events.HandleDataSent(this, new DataSentEventArgs(Guid.Empty, contentLength));
             }
             finally
             {
@@ -1087,7 +1085,7 @@
 
                 if (!_ssl) await _networkStream.FlushAsync(token).ConfigureAwait(false);
                 else await _sslStream.FlushAsync(token).ConfigureAwait(false);
-                _events.HandleDataSent(this, new DataSentEventArgs(Guid.Empty, ServerIpPort, contentLength));
+                _events.HandleDataSent(this, new DataSentEventArgs(Guid.Empty, contentLength));
             }
             catch (TaskCanceledException)
             {

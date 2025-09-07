@@ -4,6 +4,41 @@
         <name>SuperSimpleTcp</name>
     </assembly>
     <members>
+        <member name="T:SuperSimpleTcp.ClientMetadata">
+            <summary>
+            Client metadata including connection details.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientMetadata.Client">
+            <summary>
+            The underlying TCP client.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientMetadata.NetworkStream">
+            <summary>
+            The network stream for the client.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientMetadata.SslStream">
+            <summary>
+            The SSL stream for the client (if SSL is enabled).
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientMetadata.ClientId">
+            <summary>
+            The unique identifier for the client.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientMetadata.IpPort">
+            <summary>
+            The IP address and port number of the client.
+            </summary>
+        </member>
+        <member name="M:SuperSimpleTcp.ClientMetadata.Dispose">
+            <summary>
+            Dispose of the client metadata and associated resources.
+            </summary>
+        </member>
         <member name="T:SuperSimpleTcp.ConnectionEventArgs">
             <summary>
             Arguments for connection events.
@@ -12,11 +47,6 @@
         <member name="P:SuperSimpleTcp.ConnectionEventArgs.ClientId">
             <summary>
             The unique identifier of the connected client.
-            </summary>
-        </member>
-        <member name="P:SuperSimpleTcp.ConnectionEventArgs.IpPort">
-            <summary>
-            The IP address and port number of the connected peer socket.
             </summary>
         </member>
         <member name="P:SuperSimpleTcp.ConnectionEventArgs.Reason">
@@ -34,11 +64,6 @@
             The unique identifier of the connected client.
             </summary>
         </member>
-        <member name="P:SuperSimpleTcp.DataReceivedEventArgs.IpPort">
-            <summary>
-            The IP address and port number of the connected endpoint.
-            </summary>
-        </member>
         <member name="P:SuperSimpleTcp.DataReceivedEventArgs.Data">
             <summary>
             The data received from the endpoint.
@@ -52,11 +77,6 @@
         <member name="P:SuperSimpleTcp.DataSentEventArgs.ClientId">
             <summary>
             The unique identifier of the connected client.
-            </summary>
-        </member>
-        <member name="P:SuperSimpleTcp.DataSentEventArgs.IpPort">
-            <summary>
-            The IP address and port number of the connected endpoint.
             </summary>
         </member>
         <member name="P:SuperSimpleTcp.DataSentEventArgs.BytesSent">
@@ -612,6 +632,13 @@
             Retrieve a list of client IDs connected to the server.
             </summary>
             <returns>IEnumerable of GUIDs, each containing a client ID.</returns>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.GetClientMetadata(System.Guid)">
+            <summary>
+            Retrieve client metadata by client ID.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <returns>ClientMetadata object if found, null otherwise.</returns>
         </member>
         <member name="M:SuperSimpleTcp.SimpleTcpServer.IsConnected(System.String)">
             <summary>

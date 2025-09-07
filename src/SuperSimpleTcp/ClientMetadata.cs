@@ -5,32 +5,50 @@
     using System.Net.Sockets;
     using System.Threading;
 
-    internal class ClientMetadata : IDisposable
+    /// <summary>
+    /// Client metadata including connection details.
+    /// </summary>
+    public class ClientMetadata : IDisposable
     {
         #region Public-Members
 
-        internal TcpClient Client
+        /// <summary>
+        /// The underlying TCP client.
+        /// </summary>
+        public TcpClient Client
         {
             get { return _tcpClient; }
         }
          
-        internal NetworkStream NetworkStream
+        /// <summary>
+        /// The network stream for the client.
+        /// </summary>
+        public NetworkStream NetworkStream
         {
             get { return _networkStream; }
         }
 
-        internal SslStream SslStream
+        /// <summary>
+        /// The SSL stream for the client (if SSL is enabled).
+        /// </summary>
+        public SslStream SslStream
         {
             get { return _sslStream; }
             set { _sslStream = value; }
         }
 
-        internal Guid ClientId
+        /// <summary>
+        /// The unique identifier for the client.
+        /// </summary>
+        public Guid ClientId
         {
             get { return _clientId; }
         }
 
-        internal string IpPort
+        /// <summary>
+        /// The IP address and port number of the client.
+        /// </summary>
+        public string IpPort
         {
             get { return _ipPort; }
         }
@@ -71,6 +89,9 @@
 
         #region Public-Methods
 
+        /// <summary>
+        /// Dispose of the client metadata and associated resources.
+        /// </summary>
         public void Dispose()
         { 
             if (TokenSource != null)
