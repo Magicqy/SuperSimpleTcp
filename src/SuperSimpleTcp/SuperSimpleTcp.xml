@@ -343,24 +343,24 @@
             SimpleTcp client events.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpClientEvents.Connected">
+        <member name="F:SuperSimpleTcp.SimpleTcpClientEvents.Connected">
             <summary>
-            Event to call when the connection is established.
+            Action to call when the connection is established.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpClientEvents.Disconnected">
+        <member name="F:SuperSimpleTcp.SimpleTcpClientEvents.Disconnected">
             <summary>
-            Event to call when the connection is destroyed.
+            Action to call when the connection is destroyed.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpClientEvents.DataReceived">
+        <member name="F:SuperSimpleTcp.SimpleTcpClientEvents.DataReceived">
             <summary>
-            Event to call when byte data has become available from the server.
+            Action to call when byte data has become available from the server.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpClientEvents.DataSent">
+        <member name="F:SuperSimpleTcp.SimpleTcpClientEvents.DataSent">
             <summary>
-            Event to call when byte data has been sent to the server.
+            Action to call when byte data has been sent to the server.
             </summary>
         </member>
         <member name="M:SuperSimpleTcp.SimpleTcpClientEvents.#ctor">
@@ -749,24 +749,24 @@
             SimpleTcp server events.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpServerEvents.ClientConnected">
+        <member name="F:SuperSimpleTcp.SimpleTcpServerEvents.ClientConnected">
             <summary>
-            Event to call when a client connects.
+            Action to call when a client connects.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpServerEvents.ClientDisconnected">
+        <member name="F:SuperSimpleTcp.SimpleTcpServerEvents.ClientDisconnected">
             <summary>
-            Event to call when a client disconnects.
+            Action to call when a client disconnects.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpServerEvents.DataReceived">
+        <member name="F:SuperSimpleTcp.SimpleTcpServerEvents.DataReceived">
             <summary>
-            Event to call when byte data has become available from the client.
+            Action to call when byte data has become available from the client.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpServerEvents.DataSent">
+        <member name="F:SuperSimpleTcp.SimpleTcpServerEvents.DataSent">
             <summary>
-            Event to call when byte data has been sent to a client.
+            Action to call when byte data has been sent to a client.
             </summary>
         </member>
         <member name="M:SuperSimpleTcp.SimpleTcpServerEvents.#ctor">

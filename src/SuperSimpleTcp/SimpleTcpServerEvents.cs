@@ -10,24 +10,24 @@
         #region Public-Members
 
         /// <summary>
-        /// Event to call when a client connects.
+        /// Action to call when a client connects.
         /// </summary>
-        public event EventHandler<ConnectionEventArgs> ClientConnected;
+        public Action<object, ConnectionEventArgs> ClientConnected;
 
         /// <summary>
-        /// Event to call when a client disconnects.
+        /// Action to call when a client disconnects.
         /// </summary>
-        public event EventHandler<ConnectionEventArgs> ClientDisconnected;
+        public Action<object, ConnectionEventArgs> ClientDisconnected;
 
         /// <summary>
-        /// Event to call when byte data has become available from the client.
+        /// Action to call when byte data has become available from the client.
         /// </summary>
-        public event EventHandler<DataReceivedEventArgs> DataReceived;
+        public Action<object, DataReceivedEventArgs> DataReceived;
 
         /// <summary>
-        /// Event to call when byte data has been sent to a client.
+        /// Action to call when byte data has been sent to a client.
         /// </summary>
-        public event EventHandler<DataSentEventArgs> DataSent;
+        public Action<object, DataSentEventArgs> DataSent;
 
         #endregion
 
