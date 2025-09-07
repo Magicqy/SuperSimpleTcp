@@ -96,11 +96,6 @@
             Once set, use Connect() to connect to the server.
             </summary>
         </member>
-        <member name="P:SuperSimpleTcp.SimpleTcpClient.ClientId">
-            <summary>
-            Unique identifier for this client.
-            </summary>
-        </member>
         <member name="P:SuperSimpleTcp.SimpleTcpClient.IsConnected">
             <summary>
             Indicates whether or not the client is connected to the server.
