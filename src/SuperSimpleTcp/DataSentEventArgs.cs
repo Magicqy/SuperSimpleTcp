@@ -7,11 +7,17 @@
     /// </summary>
     public class DataSentEventArgs : EventArgs
     {
-        internal DataSentEventArgs(string ipPort, long bytesSent)
+        internal DataSentEventArgs(Guid clientId, string ipPort, long bytesSent)
         {
+            ClientId = clientId;
             IpPort = ipPort;
             BytesSent = bytesSent;
         }
+
+        /// <summary>
+        /// The unique identifier of the connected client.
+        /// </summary>
+        public Guid ClientId { get; }
 
         /// <summary>
         /// The IP address and port number of the connected endpoint.

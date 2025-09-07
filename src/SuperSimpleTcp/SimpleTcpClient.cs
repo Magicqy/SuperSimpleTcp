@@ -24,6 +24,11 @@
         #region Public-Members
 
         /// <summary>
+        /// Unique identifier for this client.
+        /// </summary>
+        public Guid ClientId { get; private set; } = Guid.NewGuid();
+
+        /// <summary>
         /// Indicates whether or not the client is connected to the server.
         /// </summary>
         public bool IsConnected
@@ -508,7 +513,7 @@
             _isConnected = true;
             _lastActivity = DateTime.Now;
             _isTimeout = false;
-            _events.HandleConnected(this, new ConnectionEventArgs(ServerIpPort));
+            _events.HandleConnected(this, new ConnectionEventArgs(ClientId, ServerIpPort));
             _dataReceiver = Task.Run(() => DataReceiver(_token), _token);
             _idleServerMonitor = Task.Run(IdleServerMonitor, _token);
             _connectionMonitor = Task.Run(ConnectedMonitor, _token);
@@ -650,7 +655,7 @@
             _isConnected = true;
             _lastActivity = DateTime.Now;
             _isTimeout = false;
-            _events.HandleConnected(this, new ConnectionEventArgs(ServerIpPort));
+            _events.HandleConnected(this, new ConnectionEventArgs(ClientId, ServerIpPort));
             _dataReceiver = Task.Run(() => DataReceiver(_token), _token);
             _idleServerMonitor = Task.Run(IdleServerMonitor, _token);
             _connectionMonitor = Task.Run(ConnectedMonitor, _token);
@@ -900,7 +905,7 @@
                             {
                                 _lastActivity = DateTime.Now;
 
-                                Action action = () => _events.HandleDataReceived(this, new DataReceivedEventArgs(ServerIpPort, data));
+                                Action action = () => _events.HandleDataReceived(this, new DataReceivedEventArgs(ClientId, ServerIpPort, data));
                                 if (_settings.UseAsyncDataReceivedEvents)
                                 {
                                     _ = Task.Run(action, token);
@@ -963,8 +968,8 @@
 
             _isConnected = false;
 
-            if (!_isTimeout) _events.HandleClientDisconnected(this, new ConnectionEventArgs(ServerIpPort, DisconnectReason.Normal));
-            else _events.HandleClientDisconnected(this, new ConnectionEventArgs(ServerIpPort, DisconnectReason.Timeout));
+            if (!_isTimeout) _events.HandleClientDisconnected(this, new ConnectionEventArgs(ClientId, ServerIpPort, DisconnectReason.Normal));
+            else _events.HandleClientDisconnected(this, new ConnectionEventArgs(ClientId, ServerIpPort, DisconnectReason.Timeout));
 
             Dispose();
         }
@@ -1052,7 +1057,7 @@
 
                 if (!_ssl) _networkStream.Flush();
                 else _sslStream.Flush();
-                _events.HandleDataSent(this, new DataSentEventArgs(ServerIpPort, contentLength));
+                _events.HandleDataSent(this, new DataSentEventArgs(ClientId, ServerIpPort, contentLength));
             }
             finally
             {
@@ -1085,7 +1090,7 @@
 
                 if (!_ssl) await _networkStream.FlushAsync(token).ConfigureAwait(false);
                 else await _sslStream.FlushAsync(token).ConfigureAwait(false);
-                _events.HandleDataSent(this, new DataSentEventArgs(ServerIpPort, contentLength));
+                _events.HandleDataSent(this, new DataSentEventArgs(ClientId, ServerIpPort, contentLength));
             }
             catch (TaskCanceledException)
             {

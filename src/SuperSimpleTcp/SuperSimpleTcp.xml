@@ -9,6 +9,11 @@
             Arguments for connection events.
             </summary>
         </member>
+        <member name="P:SuperSimpleTcp.ConnectionEventArgs.ClientId">
+            <summary>
+            The unique identifier of the connected client.
+            </summary>
+        </member>
         <member name="P:SuperSimpleTcp.ConnectionEventArgs.IpPort">
             <summary>
             The IP address and port number of the connected peer socket.
@@ -24,6 +29,11 @@
             Arguments for data received from connected endpoints.
             </summary>
         </member>
+        <member name="P:SuperSimpleTcp.DataReceivedEventArgs.ClientId">
+            <summary>
+            The unique identifier of the connected client.
+            </summary>
+        </member>
         <member name="P:SuperSimpleTcp.DataReceivedEventArgs.IpPort">
             <summary>
             The IP address and port number of the connected endpoint.
@@ -37,6 +47,11 @@
         <member name="T:SuperSimpleTcp.DataSentEventArgs">
             <summary>
             Arguments for data sent to a connected endpoint.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.DataSentEventArgs.ClientId">
+            <summary>
+            The unique identifier of the connected client.
             </summary>
         </member>
         <member name="P:SuperSimpleTcp.DataSentEventArgs.IpPort">
@@ -79,6 +94,11 @@
             SimpleTcp client with SSL support.  
             Set the Connected, Disconnected, and DataReceived events.  
             Once set, use Connect() to connect to the server.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.SimpleTcpClient.ClientId">
+            <summary>
+            Unique identifier for this client.
             </summary>
         </member>
         <member name="P:SuperSimpleTcp.SimpleTcpClient.IsConnected">
@@ -592,11 +612,24 @@
             </summary>
             <returns>IEnumerable of strings, each containing client IP:port.</returns>
         </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.GetClientIds">
+            <summary>
+            Retrieve a list of client IDs connected to the server.
+            </summary>
+            <returns>IEnumerable of GUIDs, each containing a client ID.</returns>
+        </member>
         <member name="M:SuperSimpleTcp.SimpleTcpServer.IsConnected(System.String)">
             <summary>
             Determines if a client is connected by its IP:port.
             </summary>
             <param name="ipPort">The client IP:port string.</param>
+            <returns>True if connected.</returns>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.IsConnected(System.Guid)">
+            <summary>
+            Determines if a client is connected by its ID.
+            </summary>
+            <param name="clientId">The client ID.</param>
             <returns>True if connected.</returns>
         </member>
         <member name="M:SuperSimpleTcp.SimpleTcpServer.Send(System.String,System.String)">
@@ -645,6 +678,59 @@
             <param name="contentLength">The number of bytes to read from the source stream to send.</param>
             <param name="stream">Stream containing the data to send.</param>
             <param name="token">Cancellation token for canceling the request.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.Send(System.Guid,System.String)">
+            <summary>
+            Send data to the specified client by ID.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="data">String containing data to send.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.Send(System.Guid,System.Byte[])">
+            <summary>
+            Send data to the specified client by ID.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="data">Byte array containing data to send.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.Send(System.Guid,System.Int64,System.IO.Stream)">
+            <summary>
+            Send data to the specified client by ID using a stream.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="contentLength">The amount of data from the stream to send.</param>
+            <param name="stream">Stream containing the data to send.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.SendAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Send data to the specified client by ID asynchronously.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="data">String containing data to send.</param>
+            <param name="token">Cancellation token for canceling the request.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.SendAsync(System.Guid,System.Byte[],System.Threading.CancellationToken)">
+            <summary>
+            Send data to the specified client by ID asynchronously.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="data">Byte array containing data to send.</param>
+            <param name="token">Cancellation token for canceling the request.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.SendAsync(System.Guid,System.Int64,System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>
+            Send data to the specified client by ID using a stream asynchronously.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="contentLength">The amount of data from the stream to send.</param>
+            <param name="stream">Stream containing the data to send.</param>
+            <param name="token">Cancellation token for canceling the request.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.DisconnectClient(System.Guid)">
+            <summary>
+            Disconnects the specified client.
+            </summary>
+            <param name="clientId">ID of the client.</param>
         </member>
         <member name="M:SuperSimpleTcp.SimpleTcpServer.DisconnectClient(System.String)">
             <summary>

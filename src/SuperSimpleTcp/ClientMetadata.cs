@@ -25,6 +25,11 @@
             set { _sslStream = value; }
         }
 
+        internal Guid ClientId
+        {
+            get { return _clientId; }
+        }
+
         internal string IpPort
         {
             get { return _ipPort; }
@@ -44,6 +49,7 @@
         private TcpClient _tcpClient = null;
         private NetworkStream _networkStream = null;
         private SslStream _sslStream = null;
+        private Guid _clientId = Guid.NewGuid();
         private string _ipPort = null; 
 
         #endregion
