@@ -23,7 +23,7 @@ namespace SuperSimpleTcp.UnitTest
             var expectedClientConnectedCount = 1;
             var clientConnectedCount = 0;
 
-            void ClientConnected(object? sender, ConnectionEventArgs e)
+            void ClientConnected(SimpleTcpServer sender, ServerConnectionEventArgs e)
             {
                 clientConnectedCount++;
             }
@@ -62,7 +62,7 @@ namespace SuperSimpleTcp.UnitTest
             var expectedClientConnectedCount = 1;
             var clientConnectedCount = 0;
 
-            void ServerClientConnected(object? sender, ConnectionEventArgs e)
+            void ServerClientConnected(SimpleTcpServer sender, ServerConnectionEventArgs e)
             {
                 clientConnectedCount++;
             }

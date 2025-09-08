@@ -508,7 +508,7 @@
             _isConnected = true;
             _lastActivity = DateTime.Now;
             _isTimeout = false;
-            _events.HandleConnected(this, new ConnectionEventArgs(Guid.Empty));
+            _events.HandleConnected(this, new ClientConnectionEventArgs(ServerIpPort));
             _dataReceiver = Task.Run(() => DataReceiver(_token), _token);
             _idleServerMonitor = Task.Run(IdleServerMonitor, _token);
             _connectionMonitor = Task.Run(ConnectedMonitor, _token);
@@ -650,7 +650,7 @@
             _isConnected = true;
             _lastActivity = DateTime.Now;
             _isTimeout = false;
-            _events.HandleConnected(this, new ConnectionEventArgs(Guid.Empty));
+            _events.HandleConnected(this, new ClientConnectionEventArgs(ServerIpPort));
             _dataReceiver = Task.Run(() => DataReceiver(_token), _token);
             _idleServerMonitor = Task.Run(IdleServerMonitor, _token);
             _connectionMonitor = Task.Run(ConnectedMonitor, _token);
@@ -963,8 +963,8 @@
 
             _isConnected = false;
 
-            if (!_isTimeout) _events.HandleClientDisconnected(this, new ConnectionEventArgs(Guid.Empty, DisconnectReason.Normal));
-            else _events.HandleClientDisconnected(this, new ConnectionEventArgs(Guid.Empty, DisconnectReason.Timeout));
+            if (!_isTimeout) _events.HandleClientDisconnected(this, new ClientConnectionEventArgs(ServerIpPort, DisconnectReason.Normal));
+            else _events.HandleClientDisconnected(this, new ClientConnectionEventArgs(ServerIpPort, DisconnectReason.Timeout));
 
             Dispose();
         }

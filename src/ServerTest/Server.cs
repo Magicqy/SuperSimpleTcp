@@ -104,18 +104,18 @@
             }
         }
 
-        static void ClientConnected(object sender, ConnectionEventArgs e)
+        static void ClientConnected(SimpleTcpServer sender, ServerConnectionEventArgs e)
         {
             _LastClientId = e.ClientId;
-            var clientMeta = _Server.GetClientMetadata(e.ClientId);
+            var clientMeta = sender.GetClientMetadata(e.ClientId);
             string ipPort = clientMeta?.IpPort ?? "unknown";
             _LastClientIpPort = ipPort;
             Console.WriteLine("[" + ipPort + "] client connected");
         }
 
-        static void ClientDisconnected(object sender, ConnectionEventArgs e)
+        static void ClientDisconnected(SimpleTcpServer sender, ServerConnectionEventArgs e)
         {
-            var clientMeta = _Server.GetClientMetadata(e.ClientId);
+            var clientMeta = sender.GetClientMetadata(e.ClientId);
             string ipPort = clientMeta?.IpPort ?? "unknown";
             Console.WriteLine("[" + ipPort + "] client disconnected: " + e.Reason.ToString());
         }

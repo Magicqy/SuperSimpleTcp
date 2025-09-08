@@ -98,14 +98,14 @@
             Console.WriteLine("Connected: " + _Client.IsConnected);
         }
 
-        static void Connected(object sender, ConnectionEventArgs e)
+        static void Connected(SimpleTcpClient sender, ClientConnectionEventArgs e)
         {
-            Console.WriteLine("*** Server " + _Client.ServerIpPort + " connected");
+            Console.WriteLine("*** Server " + e.ServerIpPort + " connected");
         }
 
-        static void Disconnected(object sender, ConnectionEventArgs e)
+        static void Disconnected(SimpleTcpClient sender, ClientConnectionEventArgs e)
         {
-            Console.WriteLine("*** Server " + _Client.ServerIpPort + " disconnected"); 
+            Console.WriteLine("*** Server " + e.ServerIpPort + " disconnected"); 
         }
 
         static void DataReceived(object sender, DataReceivedEventArgs e)

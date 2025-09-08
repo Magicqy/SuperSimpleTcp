@@ -8,7 +8,7 @@
     /// <summary>
     /// Client metadata including connection details.
     /// </summary>
-    public class ClientMetadata : IDisposable
+    internal class ClientMetadata : IDisposable
     {
         #region Public-Members
 

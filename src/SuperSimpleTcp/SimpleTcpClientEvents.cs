@@ -12,12 +12,12 @@
         /// <summary>
         /// Action to call when the connection is established.
         /// </summary>
-        public Action<SimpleTcpClient, ConnectionEventArgs> Connected;
+        public Action<SimpleTcpClient, ClientConnectionEventArgs> Connected;
 
         /// <summary>
         /// Action to call when the connection is destroyed.
         /// </summary>
-        public Action<SimpleTcpClient, ConnectionEventArgs> Disconnected;
+        public Action<SimpleTcpClient, ClientConnectionEventArgs> Disconnected;
 
         /// <summary>
         /// Action to call when byte data has become available from the server.
@@ -45,12 +45,12 @@
 
         #region Public-Methods
 
-        internal void HandleConnected(SimpleTcpClient sender, ConnectionEventArgs args)
+        internal void HandleConnected(SimpleTcpClient sender, ClientConnectionEventArgs args)
         {
             Connected?.Invoke(sender, args);
         }
 
-        internal void HandleClientDisconnected(SimpleTcpClient sender, ConnectionEventArgs args)
+        internal void HandleClientDisconnected(SimpleTcpClient sender, ClientConnectionEventArgs args)
         {
             Disconnected?.Invoke(sender, args);
         }
