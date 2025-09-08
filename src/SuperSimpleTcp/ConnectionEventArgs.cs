@@ -3,20 +3,65 @@
     using System;
 
     /// <summary>
-    /// Arguments for connection events.
+    /// Arguments for client-side connection events.
     /// </summary>
-    public class ConnectionEventArgs : EventArgs
+    public class ClientConnectionEventArgs : EventArgs
     {
-        internal ConnectionEventArgs(string ipPort, DisconnectReason reason = DisconnectReason.None)
+        internal ClientConnectionEventArgs(string serverIpPort, DisconnectReason reason = DisconnectReason.None)
         {
-            IpPort = ipPort;
+            ServerIpPort = serverIpPort;
             Reason = reason;
         }
 
         /// <summary>
-        /// The IP address and port number of the connected peer socket.
+        /// The IP:port of the server.
         /// </summary>
-        public string IpPort { get; }
+        public string ServerIpPort { get; }
+
+        /// <summary>
+        /// The reason for the disconnection, if any.
+        /// </summary>
+        public DisconnectReason Reason { get; } = DisconnectReason.None;
+    }
+
+    /// <summary>
+    /// Arguments for server-side connection events.
+    /// </summary>
+    public class ServerConnectionEventArgs : EventArgs
+    {
+        internal ServerConnectionEventArgs(Guid clientId, DisconnectReason reason = DisconnectReason.None)
+        {
+            ClientId = clientId;
+            Reason = reason;
+        }
+
+        /// <summary>
+        /// The unique identifier of the connected client.
+        /// </summary>
+        public Guid ClientId { get; }
+
+        /// <summary>
+        /// The reason for the disconnection, if any.
+        /// </summary>
+        public DisconnectReason Reason { get; } = DisconnectReason.None;
+    }
+
+    /// <summary>
+    /// Arguments for connection events (legacy - use ClientConnectionEventArgs or ServerConnectionEventArgs).
+    /// </summary>
+    [Obsolete("Use ClientConnectionEventArgs or ServerConnectionEventArgs instead")]
+    public class ConnectionEventArgs : EventArgs
+    {
+        internal ConnectionEventArgs(Guid clientId, DisconnectReason reason = DisconnectReason.None)
+        {
+            ClientId = clientId;
+            Reason = reason;
+        }
+
+        /// <summary>
+        /// The unique identifier of the connected client.
+        /// </summary>
+        public Guid ClientId { get; }
 
         /// <summary>
         /// The reason for the disconnection, if any.

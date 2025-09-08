@@ -10,24 +10,24 @@
         #region Public-Members
 
         /// <summary>
-        /// Event to call when the connection is established.
+        /// Action to call when the connection is established.
         /// </summary>
-        public event EventHandler<ConnectionEventArgs> Connected;
+        public Action<SimpleTcpClient, ClientConnectionEventArgs> Connected;
 
         /// <summary>
-        /// Event to call when the connection is destroyed.
+        /// Action to call when the connection is destroyed.
         /// </summary>
-        public event EventHandler<ConnectionEventArgs> Disconnected;
+        public Action<SimpleTcpClient, ClientConnectionEventArgs> Disconnected;
 
         /// <summary>
-        /// Event to call when byte data has become available from the server.
+        /// Action to call when byte data has become available from the server.
         /// </summary>
-        public event EventHandler<DataReceivedEventArgs> DataReceived;
+        public Action<SimpleTcpClient, DataReceivedEventArgs> DataReceived;
 
         /// <summary>
-        /// Event to call when byte data has been sent to the server.
+        /// Action to call when byte data has been sent to the server.
         /// </summary>
-        public event EventHandler<DataSentEventArgs> DataSent;
+        public Action<SimpleTcpClient, DataSentEventArgs> DataSent;
 
         #endregion
 
@@ -45,22 +45,22 @@
 
         #region Public-Methods
 
-        internal void HandleConnected(object sender, ConnectionEventArgs args)
+        internal void HandleConnected(SimpleTcpClient sender, ClientConnectionEventArgs args)
         {
             Connected?.Invoke(sender, args);
         }
 
-        internal void HandleClientDisconnected(object sender, ConnectionEventArgs args)
+        internal void HandleClientDisconnected(SimpleTcpClient sender, ClientConnectionEventArgs args)
         {
             Disconnected?.Invoke(sender, args);
         }
 
-        internal void HandleDataReceived(object sender, DataReceivedEventArgs args)
+        internal void HandleDataReceived(SimpleTcpClient sender, DataReceivedEventArgs args)
         {
             DataReceived?.Invoke(sender, args);
         }
 
-        internal void HandleDataSent(object sender, DataSentEventArgs args)
+        internal void HandleDataSent(SimpleTcpClient sender, DataSentEventArgs args)
         {
             DataSent?.Invoke(sender, args);
         }

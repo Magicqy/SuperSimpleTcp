@@ -14,6 +14,7 @@
         static string _PfxFilename = null;
         static string _PfxPassword = null;
         static string _LastClientIpPort = null;
+        static Guid _LastClientId = Guid.Empty;
         static int _IdleClientTimeoutMs = 0;
 
         static SimpleTcpServer _Server;
@@ -103,25 +104,34 @@
             }
         }
 
-        static void ClientConnected(object sender, ConnectionEventArgs e)
+        static void ClientConnected(SimpleTcpServer sender, ServerConnectionEventArgs e)
         {
-            _LastClientIpPort = e.IpPort;
-            Console.WriteLine("[" + e.IpPort + "] client connected");
+            _LastClientId = e.ClientId;
+            var clientMeta = sender.GetClientMetadata(e.ClientId);
+            string ipPort = clientMeta?.IpPort ?? "unknown";
+            _LastClientIpPort = ipPort;
+            Console.WriteLine("[" + ipPort + "] client connected");
         }
 
-        static void ClientDisconnected(object sender, ConnectionEventArgs e)
+        static void ClientDisconnected(SimpleTcpServer sender, ServerConnectionEventArgs e)
         {
-            Console.WriteLine("[" + e.IpPort + "] client disconnected: " + e.Reason.ToString());
+            var clientMeta = sender.GetClientMetadata(e.ClientId);
+            string ipPort = clientMeta?.IpPort ?? "unknown";
+            Console.WriteLine("[" + ipPort + "] client disconnected: " + e.Reason.ToString());
         }
 
         static void DataReceived(object sender, DataReceivedEventArgs e)
         {
-            Console.WriteLine("[" + e.IpPort + "]: " + Encoding.UTF8.GetString(e.Data.Array, 0, e.Data.Count));
+            var clientMeta = _Server.GetClientMetadata(e.ClientId);
+            string ipPort = clientMeta?.IpPort ?? "unknown";
+            Console.WriteLine("[" + ipPort + "]: " + Encoding.UTF8.GetString(e.Data.Array, 0, e.Data.Count));
         }
 
         private static void DataSent(object sender, DataSentEventArgs e)
         {
-            Console.WriteLine("[" + e.IpPort + "] sent " + e.BytesSent + " bytes");
+            var clientMeta = _Server.GetClientMetadata(e.ClientId);
+            string ipPort = clientMeta?.IpPort ?? "unknown";
+            Console.WriteLine("[" + ipPort + "] sent " + e.BytesSent + " bytes");
         }
 
         static void Menu()

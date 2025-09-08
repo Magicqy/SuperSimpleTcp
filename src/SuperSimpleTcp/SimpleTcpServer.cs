@@ -161,10 +161,10 @@
         private readonly X509Certificate2 _sslCertificate = null;
         private readonly X509Certificate2Collection _sslCertificateCollection = null;
 
-        private readonly ConcurrentDictionary<string, ClientMetadata> _clients = new ConcurrentDictionary<string, ClientMetadata>();
-        private readonly ConcurrentDictionary<string, DateTime> _clientsLastSeen = new ConcurrentDictionary<string, DateTime>();
-        private readonly ConcurrentDictionary<string, DateTime> _clientsKicked = new ConcurrentDictionary<string, DateTime>();
-        private readonly ConcurrentDictionary<string, DateTime> _clientsTimedout = new ConcurrentDictionary<string, DateTime>();
+        private readonly ConcurrentDictionary<Guid, ClientMetadata> _clients = new ConcurrentDictionary<Guid, ClientMetadata>();
+        private readonly ConcurrentDictionary<Guid, DateTime> _clientsLastSeen = new ConcurrentDictionary<Guid, DateTime>();
+        private readonly ConcurrentDictionary<Guid, DateTime> _clientsKicked = new ConcurrentDictionary<Guid, DateTime>();
+        private readonly ConcurrentDictionary<Guid, DateTime> _clientsTimedout = new ConcurrentDictionary<Guid, DateTime>();
 
         private TcpListener _listener = null;
         private bool _isListening = false;
@@ -487,17 +487,47 @@
         }
 
         /// <summary>
-        /// Retrieve a list of client IP:port connected to the server.
+        /// Retrieve a list of client IP:port connected to the server (legacy method, prefer using GetClientIds).
         /// </summary>
         /// <returns>IEnumerable of strings, each containing client IP:port.</returns>
         public IEnumerable<string> GetClients()
         {
-            List<string> clients = new List<string>(_clients.Keys);
+            List<string> clients = new List<string>();
+            foreach (var client in _clients.Values)
+            {
+                clients.Add(client.IpPort);
+            }
             return clients;
         }
 
         /// <summary>
-        /// Determines if a client is connected by its IP:port.
+        /// Retrieve a list of client IDs connected to the server.
+        /// </summary>
+        /// <returns>IEnumerable of GUIDs, each containing a client ID.</returns>
+        public IEnumerable<Guid> GetClientIds()
+        {
+            List<Guid> clients = new List<Guid>(_clients.Keys);
+            return clients;
+        }
+
+        /// <summary>
+        /// Retrieve client information by client ID.
+        /// </summary>
+        /// <param name="clientId">The client ID.</param>
+        /// <returns>ClientInfo object if found, null otherwise.</returns>
+        public ClientInfo GetClientMetadata(Guid clientId)
+        {
+            if (clientId == Guid.Empty) throw new ArgumentException("Client ID cannot be empty.", nameof(clientId));
+            
+            if (_clients.TryGetValue(clientId, out ClientMetadata client))
+            {
+                return new ClientInfo(client.ClientId, client.IpPort);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Determines if a client is connected by its IP:port (legacy method, prefer using GUID).
         /// </summary>
         /// <param name="ipPort">The client IP:port string.</param>
         /// <returns>True if connected.</returns>
@@ -505,7 +535,25 @@
         {
             if (string.IsNullOrEmpty(ipPort)) throw new ArgumentNullException(nameof(ipPort));
 
-            return (_clients.TryGetValue(ipPort, out _));
+            // Find client by IP:port in the GUID-based dictionary
+            foreach (var kvp in _clients)
+            {
+                if (kvp.Value.IpPort == ipPort)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Determines if a client is connected by its ID.
+        /// </summary>
+        /// <param name="clientId">The client ID.</param>
+        /// <returns>True if connected.</returns>
+        public bool IsConnected(Guid clientId)
+        {
+            return (_clients.TryGetValue(clientId, out _));
         }
 
         /// <summary>
@@ -621,23 +669,127 @@
         }
 
         /// <summary>
+        /// Send data to the specified client by ID.
+        /// </summary>
+        /// <param name="clientId">The client ID.</param>
+        /// <param name="data">String containing data to send.</param>
+        public void Send(Guid clientId, string data)
+        {
+            if (string.IsNullOrEmpty(data)) throw new ArgumentNullException(nameof(data));
+            byte[] bytes = Encoding.UTF8.GetBytes(data);
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                ms.Write(bytes, 0, bytes.Length);
+                ms.Seek(0, SeekOrigin.Begin);
+                SendInternal(clientId, bytes.Length, ms);
+            }
+        }
+
+        /// <summary>
+        /// Send data to the specified client by ID.
+        /// </summary>
+        /// <param name="clientId">The client ID.</param>
+        /// <param name="data">Byte array containing data to send.</param>
+        public void Send(Guid clientId, byte[] data)
+        {
+            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                ms.Write(data, 0, data.Length);
+                ms.Seek(0, SeekOrigin.Begin);
+                SendInternal(clientId, data.Length, ms);
+            }
+        }
+
+        /// <summary>
+        /// Send data to the specified client by ID using a stream.
+        /// </summary>
+        /// <param name="clientId">The client ID.</param>
+        /// <param name="contentLength">The amount of data from the stream to send.</param>
+        /// <param name="stream">Stream containing the data to send.</param>
+        public void Send(Guid clientId, long contentLength, Stream stream)
+        {
+            if (contentLength < 1) return;
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (!stream.CanRead) throw new InvalidOperationException("Cannot read from supplied stream.");
+
+            SendInternal(clientId, contentLength, stream);
+        }
+
+        /// <summary>
+        /// Send data to the specified client by ID asynchronously.
+        /// </summary>
+        /// <param name="clientId">The client ID.</param>
+        /// <param name="data">String containing data to send.</param>
+        /// <param name="token">Cancellation token for canceling the request.</param>
+        public async Task SendAsync(Guid clientId, string data, CancellationToken token = default)
+        {
+            if (string.IsNullOrEmpty(data)) throw new ArgumentNullException(nameof(data));
+            if (token == default(CancellationToken)) token = _token;
+
+            byte[] bytes = Encoding.UTF8.GetBytes(data);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await ms.WriteAsync(bytes, 0, bytes.Length, token).ConfigureAwait(false);
+                ms.Seek(0, SeekOrigin.Begin);
+                await SendInternalAsync(clientId, bytes.Length, ms, token).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Send data to the specified client by ID asynchronously.
+        /// </summary>
+        /// <param name="clientId">The client ID.</param>
+        /// <param name="data">Byte array containing data to send.</param>
+        /// <param name="token">Cancellation token for canceling the request.</param>
+        public async Task SendAsync(Guid clientId, byte[] data, CancellationToken token = default)
+        {
+            if (data == null || data.Length < 1) throw new ArgumentNullException(nameof(data));
+            if (token == default(CancellationToken)) token = _token;
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                await ms.WriteAsync(data, 0, data.Length, token).ConfigureAwait(false);
+                ms.Seek(0, SeekOrigin.Begin);
+                await SendInternalAsync(clientId, data.Length, ms, token).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Send data to the specified client by ID using a stream asynchronously.
+        /// </summary>
+        /// <param name="clientId">The client ID.</param>
+        /// <param name="contentLength">The amount of data from the stream to send.</param>
+        /// <param name="stream">Stream containing the data to send.</param>
+        /// <param name="token">Cancellation token for canceling the request.</param>
+        public async Task SendAsync(Guid clientId, long contentLength, Stream stream, CancellationToken token = default)
+        {
+            if (contentLength < 1) return;
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (!stream.CanRead) throw new InvalidOperationException("Cannot read from supplied stream.");
+            if (token == default(CancellationToken)) token = _token;
+
+            await SendInternalAsync(clientId, contentLength, stream, token).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Disconnects the specified client.
         /// </summary>
-        /// <param name="ipPort">IP:port of the client.</param>
-        public void DisconnectClient(string ipPort)
+        /// <param name="clientId">ID of the client.</param>
+        public void DisconnectClient(Guid clientId)
         {
-            if (string.IsNullOrEmpty(ipPort)) throw new ArgumentNullException(nameof(ipPort));
-
-            if (!_clients.TryGetValue(ipPort, out ClientMetadata client))
+            if (!_clients.TryGetValue(clientId, out ClientMetadata client))
             {
-                Logger?.Invoke($"{_header}unable to find client: {ipPort}");
+                Logger?.Invoke($"{_header}unable to find client: {clientId}");
             }
             else
             {
-                if (!_clientsTimedout.ContainsKey(ipPort))
+                if (!_clientsTimedout.ContainsKey(clientId))
                 {
-                    Logger?.Invoke($"{_header}kicking: {ipPort}");
-                    _clientsKicked.TryAdd(ipPort, DateTime.Now);
+                    Logger?.Invoke($"{_header}kicking: {clientId}");
+                    _clientsKicked.TryAdd(clientId, DateTime.Now);
                 }
             }
 
@@ -646,11 +798,40 @@
                 if (!client.TokenSource.IsCancellationRequested)
                 {
                     client.TokenSource.Cancel();
-                    Logger?.Invoke($"{_header}requesting disposal of: {ipPort}");
+                    Logger?.Invoke($"{_header}requesting disposal of: {clientId}");
                 }
 
                 client.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Disconnects the specified client by IP:port (legacy method, prefer using GUID).
+        /// </summary>
+        /// <param name="ipPort">IP:port of the client.</param>
+        public void DisconnectClient(string ipPort)
+        {
+            if (string.IsNullOrEmpty(ipPort)) throw new ArgumentNullException(nameof(ipPort));
+
+            // Find client by IP:port in the GUID-based dictionary
+            ClientMetadata client = null;
+            foreach (var kvp in _clients)
+            {
+                if (kvp.Value.IpPort == ipPort)
+                {
+                    client = kvp.Value;
+                    break;
+                }
+            }
+
+            if (client == null)
+            {
+                Logger?.Invoke($"{_header}unable to find client: {ipPort}");
+                return;
+            }
+
+            // Use the GUID-based disconnect method
+            DisconnectClient(client.ClientId);
         }
 
         #endregion
@@ -669,10 +850,10 @@
                 {
                     if (_clients != null && _clients.Count > 0)
                     {
-                        foreach (KeyValuePair<string, ClientMetadata> curr in _clients)
+                        foreach (KeyValuePair<Guid, ClientMetadata> curr in _clients)
                         {
                             curr.Value.Dispose();
-                            Logger?.Invoke($"{_header}disconnected client: {curr.Key}");
+                            Logger?.Invoke($"{_header}disconnected client: {curr.Value.IpPort}");
                         } 
                     }
 
@@ -817,10 +998,10 @@
                         }
                     }
 
-                    _clients.TryAdd(clientIpPort, client);
-                    _clientsLastSeen.TryAdd(clientIpPort, DateTime.Now);
+                    _clients.TryAdd(client.ClientId, client);
+                    _clientsLastSeen.TryAdd(client.ClientId, DateTime.Now);
                     Logger?.Invoke($"{_header}starting data receiver for: {clientIpPort}");
-                    _events.HandleClientConnected(this, new ConnectionEventArgs(clientIpPort));
+                    _events.HandleClientConnected(this, new ServerConnectionEventArgs(client.ClientId));
 
                     if (_keepalive.EnableTcpKeepAlives) EnableKeepalives(tcpClient);
 
@@ -947,7 +1128,7 @@
                         continue;
                     }
 
-                    Action action = () => _events.HandleDataReceived(this, new DataReceivedEventArgs(ipPort, data));
+                    Action action = () => _events.HandleDataReceived(this, new DataReceivedEventArgs(client.ClientId, data));
                     if (_settings.UseAsyncDataReceivedEvents)
                     {
                         _ = Task.Run(action, linkedCts.Token);
@@ -958,7 +1139,7 @@
                     }
 
                     _statistics.ReceivedBytes += data.Count;
-                    UpdateClientLastSeen(client.IpPort);
+                    UpdateClientLastSeen(client.ClientId);
                 }
                 catch (IOException)
                 {
@@ -989,23 +1170,23 @@
 
             Logger?.Invoke($"{_header}data receiver terminated for client {ipPort}");
 
-            if (_clientsKicked.ContainsKey(ipPort))
+            if (_clientsKicked.ContainsKey(client.ClientId))
             {
-                _events.HandleClientDisconnected(this, new ConnectionEventArgs(ipPort, DisconnectReason.Kicked));
+                _events.HandleClientDisconnected(this, new ServerConnectionEventArgs(client.ClientId, DisconnectReason.Kicked));
             }
-            else if (_clientsTimedout.ContainsKey(client.IpPort))
+            else if (_clientsTimedout.ContainsKey(client.ClientId))
             {
-                _events.HandleClientDisconnected(this, new ConnectionEventArgs(ipPort, DisconnectReason.Timeout));
+                _events.HandleClientDisconnected(this, new ServerConnectionEventArgs(client.ClientId, DisconnectReason.Timeout));
             }
             else
             {
-                _events.HandleClientDisconnected(this, new ConnectionEventArgs(ipPort, DisconnectReason.Normal));
+                _events.HandleClientDisconnected(this, new ServerConnectionEventArgs(client.ClientId, DisconnectReason.Normal));
             }
 
-            _clients.TryRemove(ipPort, out _);
-            _clientsLastSeen.TryRemove(ipPort, out _);
-            _clientsKicked.TryRemove(ipPort, out _);
-            _clientsTimedout.TryRemove(ipPort, out _); 
+            _clients.TryRemove(client.ClientId, out _);
+            _clientsLastSeen.TryRemove(client.ClientId, out _);
+            _clientsKicked.TryRemove(client.ClientId, out _);
+            _clientsTimedout.TryRemove(client.ClientId, out _);
 
             if (client != null) client.Dispose();
         }
@@ -1069,12 +1250,15 @@
                 { 
                     DateTime idleTimestamp = DateTime.Now.AddMilliseconds(-1 * _settings.IdleClientTimeoutMs);
 
-                    foreach (KeyValuePair<string, DateTime> curr in _clientsLastSeen)
+                    foreach (KeyValuePair<Guid, DateTime> curr in _clientsLastSeen)
                     { 
                         if (curr.Value < idleTimestamp)
                         {
                             _clientsTimedout.TryAdd(curr.Key, DateTime.Now);
-                            Logger?.Invoke($"{_header}disconnecting {curr.Key} due to timeout");
+                            if (_clients.TryGetValue(curr.Key, out ClientMetadata client))
+                            {
+                                Logger?.Invoke($"{_header}disconnecting {client.IpPort} due to timeout");
+                            }
                             DisconnectClient(curr.Key);
                         }
                     }
@@ -1086,19 +1270,57 @@
             }
         }
          
-        private void UpdateClientLastSeen(string ipPort)
+        private void UpdateClientLastSeen(Guid clientId)
         {
-            if (_clientsLastSeen.ContainsKey(ipPort))
+            if (_clientsLastSeen.ContainsKey(clientId))
             {
-                _clientsLastSeen.TryRemove(ipPort, out _);
+                _clientsLastSeen.TryRemove(clientId, out _);
             }
              
-            _clientsLastSeen.TryAdd(ipPort, DateTime.Now);
+            _clientsLastSeen.TryAdd(clientId, DateTime.Now);
         }
 
         private void SendInternal(string ipPort, long contentLength, Stream stream)
         {
-            if (!_clients.TryGetValue(ipPort, out ClientMetadata client)) return;
+            // Find client by IP:port in the GUID-based dictionary
+            ClientMetadata client = null;
+            foreach (var kvp in _clients)
+            {
+                if (kvp.Value.IpPort == ipPort)
+                {
+                    client = kvp.Value;
+                    break;
+                }
+            }
+            
+            if (client == null) return;
+
+            // Use the GUID-based send method
+            SendInternal(client.ClientId, contentLength, stream);
+        }
+
+        private async Task SendInternalAsync(string ipPort, long contentLength, Stream stream, CancellationToken token)
+        {
+            // Find client by IP:port in the GUID-based dictionary
+            ClientMetadata client = null;
+            foreach (var kvp in _clients)
+            {
+                if (kvp.Value.IpPort == ipPort)
+                {
+                    client = kvp.Value;
+                    break;
+                }
+            }
+            
+            if (client == null) return;
+
+            // Use the GUID-based send method
+            await SendInternalAsync(client.ClientId, contentLength, stream, token);
+        }
+
+        private void SendInternal(Guid clientId, long contentLength, Stream stream)
+        {
+            if (!_clients.TryGetValue(clientId, out ClientMetadata client)) return;
             if (client == null) return;
 
             long bytesRemaining = contentLength;
@@ -1124,7 +1346,7 @@
 
                 if (!_ssl) client.NetworkStream.Flush();
                 else client.SslStream.Flush();
-                _events.HandleDataSent(this, new DataSentEventArgs(ipPort, contentLength));
+                _events.HandleDataSent(this, new DataSentEventArgs(clientId, contentLength));
             }
             finally
             {
@@ -1132,13 +1354,13 @@
             }
         }
 
-        private async Task SendInternalAsync(string ipPort, long contentLength, Stream stream, CancellationToken token)
+        private async Task SendInternalAsync(Guid clientId, long contentLength, Stream stream, CancellationToken token)
         {
             ClientMetadata client = null;
 
             try
             {
-                if (!_clients.TryGetValue(ipPort, out client)) return;
+                if (!_clients.TryGetValue(clientId, out client)) return;
                 if (client == null) return;
 
                 long bytesRemaining = contentLength;
@@ -1162,7 +1384,7 @@
 
                 if (!_ssl) await client.NetworkStream.FlushAsync(token).ConfigureAwait(false);
                 else await client.SslStream.FlushAsync(token).ConfigureAwait(false);
-                _events.HandleDataSent(this, new DataSentEventArgs(ipPort, contentLength));
+                _events.HandleDataSent(this, new DataSentEventArgs(clientId, contentLength));
             }
             catch (TaskCanceledException)
             {

@@ -4,14 +4,94 @@
         <name>SuperSimpleTcp</name>
     </assembly>
     <members>
-        <member name="T:SuperSimpleTcp.ConnectionEventArgs">
+        <member name="T:SuperSimpleTcp.ClientInfo">
             <summary>
-            Arguments for connection events.
+            Public information about a connected client.
             </summary>
         </member>
-        <member name="P:SuperSimpleTcp.ConnectionEventArgs.IpPort">
+        <member name="P:SuperSimpleTcp.ClientInfo.ClientId">
             <summary>
-            The IP address and port number of the connected peer socket.
+            The unique identifier for the client.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientInfo.IpPort">
+            <summary>
+            The IP address and port number of the client.
+            </summary>
+        </member>
+        <member name="T:SuperSimpleTcp.ClientMetadata">
+            <summary>
+            Client metadata including connection details.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientMetadata.Client">
+            <summary>
+            The underlying TCP client.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientMetadata.NetworkStream">
+            <summary>
+            The network stream for the client.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientMetadata.SslStream">
+            <summary>
+            The SSL stream for the client (if SSL is enabled).
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientMetadata.ClientId">
+            <summary>
+            The unique identifier for the client.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientMetadata.IpPort">
+            <summary>
+            The IP address and port number of the client.
+            </summary>
+        </member>
+        <member name="M:SuperSimpleTcp.ClientMetadata.Dispose">
+            <summary>
+            Dispose of the client metadata and associated resources.
+            </summary>
+        </member>
+        <member name="T:SuperSimpleTcp.ClientConnectionEventArgs">
+            <summary>
+            Arguments for client-side connection events.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientConnectionEventArgs.ServerIpPort">
+            <summary>
+            The IP:port of the server.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ClientConnectionEventArgs.Reason">
+            <summary>
+            The reason for the disconnection, if any.
+            </summary>
+        </member>
+        <member name="T:SuperSimpleTcp.ServerConnectionEventArgs">
+            <summary>
+            Arguments for server-side connection events.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ServerConnectionEventArgs.ClientId">
+            <summary>
+            The unique identifier of the connected client.
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ServerConnectionEventArgs.Reason">
+            <summary>
+            The reason for the disconnection, if any.
+            </summary>
+        </member>
+        <member name="T:SuperSimpleTcp.ConnectionEventArgs">
+            <summary>
+            Arguments for connection events (legacy - use ClientConnectionEventArgs or ServerConnectionEventArgs).
+            </summary>
+        </member>
+        <member name="P:SuperSimpleTcp.ConnectionEventArgs.ClientId">
+            <summary>
+            The unique identifier of the connected client.
             </summary>
         </member>
         <member name="P:SuperSimpleTcp.ConnectionEventArgs.Reason">
@@ -24,9 +104,9 @@
             Arguments for data received from connected endpoints.
             </summary>
         </member>
-        <member name="P:SuperSimpleTcp.DataReceivedEventArgs.IpPort">
+        <member name="P:SuperSimpleTcp.DataReceivedEventArgs.ClientId">
             <summary>
-            The IP address and port number of the connected endpoint.
+            The unique identifier of the connected client.
             </summary>
         </member>
         <member name="P:SuperSimpleTcp.DataReceivedEventArgs.Data">
@@ -39,9 +119,9 @@
             Arguments for data sent to a connected endpoint.
             </summary>
         </member>
-        <member name="P:SuperSimpleTcp.DataSentEventArgs.IpPort">
+        <member name="P:SuperSimpleTcp.DataSentEventArgs.ClientId">
             <summary>
-            The IP address and port number of the connected endpoint.
+            The unique identifier of the connected client.
             </summary>
         </member>
         <member name="P:SuperSimpleTcp.DataSentEventArgs.BytesSent">
@@ -323,24 +403,24 @@
             SimpleTcp client events.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpClientEvents.Connected">
+        <member name="F:SuperSimpleTcp.SimpleTcpClientEvents.Connected">
             <summary>
-            Event to call when the connection is established.
+            Action to call when the connection is established.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpClientEvents.Disconnected">
+        <member name="F:SuperSimpleTcp.SimpleTcpClientEvents.Disconnected">
             <summary>
-            Event to call when the connection is destroyed.
+            Action to call when the connection is destroyed.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpClientEvents.DataReceived">
+        <member name="F:SuperSimpleTcp.SimpleTcpClientEvents.DataReceived">
             <summary>
-            Event to call when byte data has become available from the server.
+            Action to call when byte data has become available from the server.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpClientEvents.DataSent">
+        <member name="F:SuperSimpleTcp.SimpleTcpClientEvents.DataSent">
             <summary>
-            Event to call when byte data has been sent to the server.
+            Action to call when byte data has been sent to the server.
             </summary>
         </member>
         <member name="M:SuperSimpleTcp.SimpleTcpClientEvents.#ctor">
@@ -588,15 +668,35 @@
         </member>
         <member name="M:SuperSimpleTcp.SimpleTcpServer.GetClients">
             <summary>
-            Retrieve a list of client IP:port connected to the server.
+            Retrieve a list of client IP:port connected to the server (legacy method, prefer using GetClientIds).
             </summary>
             <returns>IEnumerable of strings, each containing client IP:port.</returns>
         </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.GetClientIds">
+            <summary>
+            Retrieve a list of client IDs connected to the server.
+            </summary>
+            <returns>IEnumerable of GUIDs, each containing a client ID.</returns>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.GetClientMetadata(System.Guid)">
+            <summary>
+            Retrieve client information by client ID.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <returns>ClientInfo object if found, null otherwise.</returns>
+        </member>
         <member name="M:SuperSimpleTcp.SimpleTcpServer.IsConnected(System.String)">
             <summary>
-            Determines if a client is connected by its IP:port.
+            Determines if a client is connected by its IP:port (legacy method, prefer using GUID).
             </summary>
             <param name="ipPort">The client IP:port string.</param>
+            <returns>True if connected.</returns>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.IsConnected(System.Guid)">
+            <summary>
+            Determines if a client is connected by its ID.
+            </summary>
+            <param name="clientId">The client ID.</param>
             <returns>True if connected.</returns>
         </member>
         <member name="M:SuperSimpleTcp.SimpleTcpServer.Send(System.String,System.String)">
@@ -646,9 +746,62 @@
             <param name="stream">Stream containing the data to send.</param>
             <param name="token">Cancellation token for canceling the request.</param>
         </member>
-        <member name="M:SuperSimpleTcp.SimpleTcpServer.DisconnectClient(System.String)">
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.Send(System.Guid,System.String)">
+            <summary>
+            Send data to the specified client by ID.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="data">String containing data to send.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.Send(System.Guid,System.Byte[])">
+            <summary>
+            Send data to the specified client by ID.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="data">Byte array containing data to send.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.Send(System.Guid,System.Int64,System.IO.Stream)">
+            <summary>
+            Send data to the specified client by ID using a stream.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="contentLength">The amount of data from the stream to send.</param>
+            <param name="stream">Stream containing the data to send.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.SendAsync(System.Guid,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Send data to the specified client by ID asynchronously.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="data">String containing data to send.</param>
+            <param name="token">Cancellation token for canceling the request.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.SendAsync(System.Guid,System.Byte[],System.Threading.CancellationToken)">
+            <summary>
+            Send data to the specified client by ID asynchronously.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="data">Byte array containing data to send.</param>
+            <param name="token">Cancellation token for canceling the request.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.SendAsync(System.Guid,System.Int64,System.IO.Stream,System.Threading.CancellationToken)">
+            <summary>
+            Send data to the specified client by ID using a stream asynchronously.
+            </summary>
+            <param name="clientId">The client ID.</param>
+            <param name="contentLength">The amount of data from the stream to send.</param>
+            <param name="stream">Stream containing the data to send.</param>
+            <param name="token">Cancellation token for canceling the request.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.DisconnectClient(System.Guid)">
             <summary>
             Disconnects the specified client.
+            </summary>
+            <param name="clientId">ID of the client.</param>
+        </member>
+        <member name="M:SuperSimpleTcp.SimpleTcpServer.DisconnectClient(System.String)">
+            <summary>
+            Disconnects the specified client by IP:port (legacy method, prefer using GUID).
             </summary>
             <param name="ipPort">IP:port of the client.</param>
         </member>
@@ -663,24 +816,24 @@
             SimpleTcp server events.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpServerEvents.ClientConnected">
+        <member name="F:SuperSimpleTcp.SimpleTcpServerEvents.ClientConnected">
             <summary>
-            Event to call when a client connects.
+            Action to call when a client connects.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpServerEvents.ClientDisconnected">
+        <member name="F:SuperSimpleTcp.SimpleTcpServerEvents.ClientDisconnected">
             <summary>
-            Event to call when a client disconnects.
+            Action to call when a client disconnects.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpServerEvents.DataReceived">
+        <member name="F:SuperSimpleTcp.SimpleTcpServerEvents.DataReceived">
             <summary>
-            Event to call when byte data has become available from the client.
+            Action to call when byte data has become available from the client.
             </summary>
         </member>
-        <member name="E:SuperSimpleTcp.SimpleTcpServerEvents.DataSent">
+        <member name="F:SuperSimpleTcp.SimpleTcpServerEvents.DataSent">
             <summary>
-            Event to call when byte data has been sent to a client.
+            Action to call when byte data has been sent to a client.
             </summary>
         </member>
         <member name="M:SuperSimpleTcp.SimpleTcpServerEvents.#ctor">

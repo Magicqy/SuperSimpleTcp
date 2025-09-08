@@ -7,16 +7,16 @@
     /// </summary>
     public class DataReceivedEventArgs : EventArgs
     {
-        internal DataReceivedEventArgs(string ipPort, ArraySegment<byte> data)
+        internal DataReceivedEventArgs(Guid clientId, ArraySegment<byte> data)
         {
-            IpPort = ipPort;
+            ClientId = clientId;
             Data = data;
         }
 
         /// <summary>
-        /// The IP address and port number of the connected endpoint.
+        /// The unique identifier of the connected client.
         /// </summary>
-        public string IpPort { get; }
+        public Guid ClientId { get; }
 
         /// <summary>
         /// The data received from the endpoint.
